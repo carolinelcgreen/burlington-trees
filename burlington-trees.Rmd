@@ -1,0 +1,78 @@
+---
+title: "burlington-trees"
+author: "Caroline Green"
+date: "4/13/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(lubridate)
+library(zoo)
+
+```
+
+```{r data_clean}
+# read in csv file
+trees <- read.csv("./Burlington_Trees.csv")
+
+# separate Geo.Point column to latitude and longitude
+# and convert to numeric variables
+trees <- trees %>% 
+         separate(Geo.Point, c("lat", "long"), ",") %>% 
+         mutate(lat = as.numeric(lat),
+                long = as.numeric(long))
+
+trees
+
+# convert zeros in numeric columns to NA so they will not be included in graphs
+# in this case, zero values are due to lack of information, not lack of value,
+# so all were converted to NA values to be filtered out later
+# repeat for blank values
+trees[trees == 0] <- NA
+trees[trees == ""] <- NA
+
+# convert dates to better format
+trees <- trees %>% 
+  mutate(modified = as.yearmon(modified, "%m/%Y"))
+
+```
+
+
+
+```{r}
+# number of trees by species
+# histogram
+```
+
+
+```{r}
+# landuse v species
+# multiple bar chart
+# see if certain types of trees are more common by business, residential, etc.
+
+
+```
+
+
+```{r land_use_distrib}
+# will
+# map of burlington with points as trees and colored by land use type
+# map of burlington with points as trees and colored by species
+# facet wrap them next to each other!
+
+```
+
+```{r}
+# diameter v appraisal
+# scatterplot probably
+
+```
+
+
+
+
+
