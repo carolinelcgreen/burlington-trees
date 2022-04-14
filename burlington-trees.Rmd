@@ -1,10 +1,19 @@
 ---
-title: "burlington-trees"
-author: "Caroline Green"
-date: "4/13/2022"
-output: html_document
+title: "A Statistical and Visual Analysis of Municipally-Maintained Trees in the City of Burlington, VT"
+author: "Isabelle Franke, Caroline Green, Will Guisbond"
+date: "4/15/2022"
+output:
+  pdf_document:
+    number_sections: yes
+  html_notebook:
+    number_sections: yes
 ---
+# Introduction
 
+
+# Visualization & Analysis
+
+## Data Cleaning
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
@@ -26,8 +35,6 @@ trees <- trees %>%
          mutate(lat = as.numeric(lat),
                 long = as.numeric(long))
 
-trees
-
 # convert zeros in numeric columns to NA so they will not be included in graphs
 # in this case, zero values are due to lack of information, not lack of value,
 # so all were converted to NA values to be filtered out later
@@ -39,15 +46,19 @@ trees[trees == ""] <- NA
 trees <- trees %>% 
   mutate(modified = as.yearmon(modified, "%m/%Y"))
 
+head(trees)
+
 ```
 
-
+## Number of Trees by Species
 
 ```{r}
 # number of trees by species
 # histogram
 ```
 
+
+## Relationship between species abundance and landuse
 
 ```{r}
 # landuse v species
@@ -57,6 +68,7 @@ trees <- trees %>%
 
 ```
 
+## The Trees of Burlington
 
 ```{r land_use_distrib}
 # will
@@ -66,6 +78,8 @@ trees <- trees %>%
 
 ```
 
+## Appraisal Estimates
+
 ```{r}
 # diameter v appraisal
 # scatterplot probably
@@ -73,6 +87,6 @@ trees <- trees %>%
 ```
 
 
-
+# Machine Learning
 
 
