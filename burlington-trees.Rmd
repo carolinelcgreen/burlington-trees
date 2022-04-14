@@ -22,11 +22,14 @@ library(tidyverse)
 library(lubridate)
 library(zoo)
 
+theme_set(theme_bw())
+
 ```
 
 ```{r data_clean}
 # read in csv file
 trees <- read.csv("./Burlington_Trees.csv")
+library("magrittr")
 
 # separate Geo.Point column to latitude and longitude
 # and convert to numeric variables
@@ -34,6 +37,17 @@ trees <- trees %>%
          separate(Geo.Point, c("lat", "long"), ",") %>% 
          mutate(lat = as.numeric(lat),
                 long = as.numeric(long))
+
+# separate species column into genus, species
+trees <- trees %>% 
+         separate(species, c("genus", "species"), ",")
+
+# remove the "spp" included as a place holder for genus
+trees$genus <- gsub(" spp", "", trees$genus)
+
+# correct the misspelling of mapl to maple
+trees$genus <- gsub("mapl", "maple", trees$genus, fixed = TRUE)
+trees$genus <- gsub("maplee", "maple", trees$genus)
 
 # convert zeros in numeric columns to NA so they will not be included in graphs
 # in this case, zero values are due to lack of information, not lack of value,
@@ -46,6 +60,7 @@ trees[trees == ""] <- NA
 trees <- trees %>% 
   mutate(modified = as.yearmon(modified, "%m/%Y"))
 
+# cleaned data frame
 head(trees)
 
 ```
@@ -58,13 +73,42 @@ head(trees)
 ```
 
 
-## Relationship between species abundance and landuse
+## Relationship between species abundance and Land Use
 
 ```{r}
 # landuse v species
 # multiple bar chart
 # see if certain types of trees are more common by business, residential, etc.
 
+# format the data into a new data fram
+landuse_by_genus <- xtabs(formula = ~ landuse + genus,
+                       data = trees) %>% 
+  prop.table(margin = "landuse") %>%  # calculates proportio
+  
+  # pipe into data.frame
+  # Using data.frame() turns it from a table into a data frame
+  data.frame() %>% 
+  filter(Freq > .1) 
+
+landuse_by_genus
+
+landuse_species_bar <- ggplot(data = landuse_by_genus,
+       mapping = aes(x = landuse,
+                     fill = genus,
+                     y = Freq)) + 
+  
+  # Now we need to tell geom_bar() to override it'd default choice of y
+  # We do this with stat = "identity" (identity means "Use the y I gave you!")
+  geom_bar(color = "black",
+           stat = "identity",
+           position = "fill") + 
+  
+  labs(y = "Proportion", 
+       title = "Top Genus per Land Use Type",
+       x = "Land Use Type")
+
+
+landuse_species_bar
 
 ```
 
