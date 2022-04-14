@@ -21,6 +21,8 @@ library(dplyr)
 library(tidyverse)
 library(lubridate)
 library(zoo)
+library(mapview)
+library(ggmap)
 
 theme_set(theme_bw())
 
@@ -117,6 +119,12 @@ landuse_species_bar
 ```{r land_use_distrib}
 # will
 # map of burlington with points as trees and colored by land use type
+
+trees_map <- trees %>%
+  filter(zone_id == 'ward 5')
+  mapView(trees_map, xcol = "long", ycol = "lat", zcol = "appraise", crs = 4269, grid = FALSE)
+
+
 # map of burlington with points as trees and colored by species
 # facet wrap them next to each other!
 
