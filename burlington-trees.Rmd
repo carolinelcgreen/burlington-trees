@@ -10,6 +10,16 @@ output:
 ---
 # Introduction
 
+•	What is the source of the data?  Where and when was it created?
+•	If it is a sample, from what population was it drawn, and how was the sample selected? 
+•	Do you suspect any sampling bias?
+•	Was it an experiment or an observational study? 
+•	How were measurements taken, or questions asked?
+•	Do you suspect any bias in the questions or measurements?
+•	Why is this data of interest to you, and why should the class find it interesting?
+•	What kind of data cleaning was necessary (R code for this must show…)
+
+City arborists in Burlington, Vermont have maintained a comprehensive dataset containing various features of every tree planted by the city since 1982, including date planted, GPS coordinates, land use type, species, diameter, height, tree condition, and appraisal estimate. These data have important implications in environmental assessments and future sustainability efforts from the city.
 
 # Visualization & Analysis
 
@@ -65,7 +75,7 @@ head(trees)
 
 ```
 
-## Number of Trees by Species
+## Number of Trees by Genus
 
 ```{r}
 # number of trees by species
@@ -105,7 +115,10 @@ landuse_species_bar <- ggplot(data = landuse_by_genus,
   
   labs(y = "Proportion", 
        title = "Top Genus per Land Use Type",
-       x = "Land Use Type")
+       x = "Land Use Type") +
+  
+  theme(axis.text.x = element_text(angle = 30,
+                                 hjust = 1))
 
 
 landuse_species_bar
