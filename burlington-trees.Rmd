@@ -139,7 +139,14 @@ landuse_species_bar
 ```{r}
 # diameter v appraisal
 # scatterplot probably
+appraisal <- trees %>% filter(appraise != "NA", diameter != "NA", height != "NA") %>%
+  ggplot(mapping=aes(x=diameter,y=height, color=appraise)) +
+  geom_point() +
+  scale_color_gradient2(low = 'brown', high = 'green', midpoint=35000, mid="forestgreen") +
+  labs(title="Appraisal Value by Height and Diameter", x="Diameter", y="Height", color="Appraisal Value")
+  
 
+appraisal
 ```
 
 
