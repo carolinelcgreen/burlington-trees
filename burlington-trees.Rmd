@@ -10,11 +10,19 @@ output:
 ---
 # Introduction
 
+City arborists in Burlington, Vermont have maintained a comprehensive dataset containing various features detailing every tree planted by the city since 1982, including date planted, GPS coordinates, land use type, species, diameter, height, tree condition, and appraisal estimate. These data have important implications in environmental assessments and future sustainability efforts from the city. The creation and curation of the data is part of the Urban Forestry Program by the Department of Parks and Recreation in Burlington, dedicated to expanding and protecting urban forests in the city. Trees, particularly in urban environments, can have massive impacts on the ecosystem. These benefits include increased property value, less drastic temperature fluctuations, reduced erosion, and air pollution control. According to the Burlington Parks and Rec Department, " tree with a 50-year life span provides nearly $60,000 of benefit over its lifetime," not to mention all the other un-quantifiable ways trees add to our lives through recreation, aesthetics, and ecosystem benefits (Burlington Parks and Recreation, 2022).
+
+However, the current state of the data leaves a lot to be desired by those interested in analyzing it. There doesn't appear to be any clear bias, but the dates included in the `modified` column expose a lack of updating to the dataset. The dataset was accessed in early 2022, and the most recent update listed is from December, 2019. Additionally, although the dataset is quite large, it is not comprehensive, and contains vast numbers of empty values or zeros. For example, the `planted` column, meant to inform the user of when the tree was planted, is about 85% zeros. 
+
+When assessing what data cleaning steps needed to be taken, we had to first decide whether the large number of zeros were due to a lack of value or a lack of information. Looking closer into the data, the variables containing zeros (`diameter`, `height`, `spread`, `trunks`, `condiition`, `appraise`, `planted`) could not realistically be zero and be a living tree. Therefore, we determined that all of the zeros were, in reality, null values and were adjusted accordingly to prevent zeros from skewing downstream analyses. In addition to zeros, we also converted any empty cells to NA as well. Other data cleaning steps, all outlined in our code below, included splitting `Geo.Point`, the coordinates, into longitude and latitude to increase ease of use. We also split up the `species` column into Genus and Species, to allow for better grouping for visualizations (though it should be noted that all genera and species are listed in common names, not scientific). The column also posed another problem: a lack of a common naming format. FOr example, two Maple species were named "mapl,red" and "mapl,sugar" but another one was named "maple free aut bl", meaning that some fine tuning of the spelling and separation of the species names was necessary. We also updated the date format for the `modified` column. 
+
+The observational data curated by the city arborists is first and foremost a reference database for the city to keep track of the number and condition of trees in their care. For this to be a valuable asset, however, it requires that the city maintain and keep the information up-to-date. On the other hand, it can also be used by citizens to learn more about the trees on their street or in their neighborhood park. It provides anyone with a computer access to an abundance of information on the trees of Burlington and possesses a lot of potential to better understand the urban landscape of the city. This research project will analyze the Burlington tree data using visualizations and machine learning algorithms to better understand the abundance, distribution, and makeup of the urban forest in the city of Burlington, Vermont.
+
 
 # Visualization & Analysis
 
 ## Data Cleaning
-```{r setup, include=FALSE}
+```{r setup}
 knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(dplyr)
@@ -23,6 +31,7 @@ library(lubridate)
 library(zoo)
 library(mapview)
 library(ggmap)
+library(grid)
 
 theme_set(theme_bw())
 
@@ -72,8 +81,21 @@ head(trees)
 ```{r}
 # number of trees by species
 # histogram
+
+spec_hist <- trees %>% group_by(genus) %>% mutate(freq = n()) %>% 
+  filter(freq>100, genus!="NA", genus!="unknown") %>%
+  ggplot(aes(x=reorder(genus, genus, function(x) length(x)))) +
+  geom_bar(fill="forestgreen") + 
+  coord_flip() +
+  labs(title="Most common tree genuses in Burlington", x="Genus", y="Count") +
+  scale_y_continuous(expand=c(0,0), limits=c(0,3000), breaks=seq(0,3000,500)) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border= element_blank(),
+        plot.title=element_text(hjust=0.5), axis.line = element_line(), plot.margin=unit(c(0.5,1,0.5,0.5),"cm"))
+spec_hist
+
 ```
 
+This bar chart shows the most common tree genuses in Burlington. Unsurprisingly to anyone who lives in Vermont, the maple tree is by far the most common tree in Burlington. Next comes the Ash, Crabapple, Linden, Oak, and Pine. Considering Burlington's climate and elevation, these all make sense. In the higher elevations of Vermont, evergreens such as pine trees are more common, but since Burlington is by the lake, it has the deciduous trees that make it beautiful in the fall (and barren in the spring).
 
 ## Relationship between species abundance and Land Use
 
@@ -85,31 +107,23 @@ head(trees)
 # format the data into a new data fram
 landuse_by_genus <- xtabs(formula = ~ landuse + genus,
                        data = trees) %>% 
-  prop.table(margin = "landuse") %>%  # calculates proportio
-  
-  # pipe into data.frame
-  # Using data.frame() turns it from a table into a data frame
+  prop.table(margin = "landuse") %>%  
   data.frame() %>% 
   filter(Freq > .1) 
-
-landuse_by_genus
-
+head(landuse_by_genus)
+# make bar graph with frequency table
 landuse_species_bar <- ggplot(data = landuse_by_genus,
        mapping = aes(x = landuse,
                      fill = genus,
                      y = Freq)) + 
-  
-  # Now we need to tell geom_bar() to override it'd default choice of y
-  # We do this with stat = "identity" (identity means "Use the y I gave you!")
   geom_bar(color = "black",
            stat = "identity",
            position = "fill") + 
-  
   labs(y = "Proportion", 
        title = "Top Genus per Land Use Type",
-       x = "Land Use Type")
-
-
+       x = "Land Use Type") +
+  theme(axis.text.x = element_text(angle = 30,
+                                 hjust = 1))
 landuse_species_bar
 
 ```
@@ -118,17 +132,56 @@ landuse_species_bar
 
 ```{r land_use_distrib}
 # will
-# map of burlington with points as trees and colored by land use type
+# map of burlington with points as trees and colored by land use type, collated out by ward
 
-trees_map <- trees %>%
+trees_map_1 <- trees %>%
+  filter(zone_id == 'ward 1')
+  mapView(trees_map_1, xcol = "long", ycol = "lat", zcol = "landuse", crs = 4269, grid = FALSE)
+
+trees_map_2 <- trees %>%
+  filter(zone_id == 'ward 2')
+  mapView(trees_map_2, xcol = "long", ycol = "lat", zcol = "landuse", crs = 4269, grid = FALSE)
+
+trees_map_3 <- trees %>%
+  filter(zone_id == 'ward 3')
+  mapView(trees_map_3, xcol = "long", ycol = "lat", zcol = "landuse", crs = 4269, grid = FALSE)
+
+trees_map_4 <- trees %>%
+  filter(zone_id == 'ward 4')
+  mapView(trees_map_4, xcol = "long", ycol = "lat", zcol = "landuse", crs = 4269, grid = FALSE)
+
+trees_map_5 <- trees %>%
   filter(zone_id == 'ward 5')
-  mapView(trees_map, xcol = "long", ycol = "lat", zcol = "appraise", crs = 4269, grid = FALSE)
+  mapView(trees_map_5, xcol = "long", ycol = "lat", zcol = "landuse", crs = 4269, grid = FALSE)
+  
+trees_map_6 <- trees %>%
+  filter(zone_id == 'ward 6')
+  mapView(trees_map_6, xcol = "long", ycol = "lat", zcol = "landuse", crs = 4269, grid = FALSE)
+  
+trees_map_7 <- trees %>%
+  filter(zone_id == 'ward 7')
+  mapView(trees_map_7, xcol = "long", ycol = "lat", zcol = "landuse", crs = 4269, grid = FALSE)
+  
+trees_map_8 <- trees %>%
+  filter(zone_id == 'ward 8')
+  mapView(trees_map_8, xcol = "long", ycol = "lat", zcol = "landuse", crs = 4269, grid = FALSE)
 
+trees_map_1
+trees_map_2
+trees_map_3
+trees_map_4
+trees_map_5
+trees_map_6
+trees_map_7
+trees_map_8
 
-# map of burlington with points as trees and colored by species
-# facet wrap them next to each other!
+# map of burlington with points as trees and colored by species (coming soon)
 
 ```
+
+The maps above show the location of all trees in Burlington, collated into 8 separate maps sorted by ward number. On each map, we see the trees organized by their land use type (ie. residental vs commercial depending on the zone of that given plot of land). Based off of what I know about Burlington having lived here, this feels like it aligns well with how I think about various parts of the city. It is interesting to lay these points out on a map and see how they line up to various locations; it is clear to us that based on these maps, this dataset is incomplete in a lot of places. Specifically, ward 1 data seems to be missing trees from UVM, and some other spots in and around campus. This begs the question of how the data is collected and taged to produce the dataset we are now working with. However, in the end, this is certainly a unique way to look at zoning levels throughout the city through the various trees that are in each respective region. 
+
+QUESTION: I'm not quite sure the best way to arrange these maps; we elected to use an external mapping package instead of something like ggplot because it didn't have data for the city of Burlington. Would love to see if you have any suggestions for changing zoom / making this more readable, or perhaps just an alternative mapping method. Thanks!
 
 ## Appraisal Estimates
 
@@ -136,9 +189,25 @@ trees_map <- trees %>%
 # diameter v appraisal
 # scatterplot probably
 
+appraisal <- trees %>% filter(appraise != "NA", diameter != "NA", height != "NA") %>%
+  ggplot(mapping=aes(x=diameter,y=height, color=appraise)) +
+  geom_point() +
+  scale_color_gradient2(low = 'brown', high = 'green', midpoint=35000, mid="forestgreen") +
+  labs(title="Appraisal Value by Height and Diameter", x="Diameter", y="Height", color="Appraisal Value")
+  
+appraisal
+
 ```
+This graph shows the relationship between a tree's diameter, height, and appraisal value. It is clear that there is a relationship between diameter and height, and thicker trees are usually taller. From this plot, it is clear that diameter is more influential than height for a tree's value. The trees with relatively high height and small diameter are worth significantly less than the shorter, thicker trees. This probably has to do with the way that trees age "outwards," making their diameter a better indicator of their age than their height. It seems that there are very few extremely valuable trees, and many trees which are small and cheap.
 
 
-# Machine Learning
+# Machine Learning (coming soon)
 
+# Conclusion
+
+(waiting on this seciton until we have finalized analysis post draft feedback)
+
+# Limitations
+
+As discussed above, some limitations in our data are mainly centered around the incompleteness of the set. For the map section, it was clear that not every tree in Burlington was represented, and therefore it may prove difficult. Additionally, as made apparent by the multitude of NA values, there are many trees that came in with little to no information (ie. missing diameter, appraisal, etc.). This was interesting seeing as the tree was recorded but just missing various characteristics. However, despite these limitations, it is clear that this dataset is incredibly insightful and could be used in future projects to propose new arbory projects for the city, as well as increase sustainability initiatives through planting trees in areas identified as lacking through this data. 
 
