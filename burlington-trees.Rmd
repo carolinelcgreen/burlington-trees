@@ -83,7 +83,7 @@ spec_hist <- trees %>% group_by(genus) %>% mutate(freq = n()) %>%
 spec_hist
 
 ```
-
+This bar chart shows the most common tree genuses in Burlington. Unsurprisingly to anyone who lives in Vermont, the maple tree is by far the most common tree in Burlington. Next comes the Ash, Crabapple, Linden, Oak, and Pine. Considering Burlington's climate and elevation, these all make sense. In the higher elevations of Vermont, evergreens such as pine trees are more common, but since Burlington is by the lake, it has the deciduous trees that make it beautiful in the fall (and barren in the spring).
 
 ## Relationship between species abundance and Land Use
 
@@ -148,7 +148,7 @@ appraisal <- trees %>% filter(appraise != "NA", diameter != "NA", height != "NA"
 
 appraisal
 ```
-
+This graph shows the relationship between a tree's diameter, height, and appraisal value. It is clear that there is a relationship between diameter and height, and thicker trees are usually taller. From this plot, it is clear that diameter is more influential than height for a tree's value. The trees with relatively high height and small diameter are worth significantly less than the shorter, thicker trees. This probably has to do with the way that trees age "outwards," making their diameter a better indicator of their age than their height. It seems that there are very few extremely valuable trees, and many trees which are small and cheap.
 
 # Machine Learning
 
