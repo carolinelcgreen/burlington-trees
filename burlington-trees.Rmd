@@ -70,8 +70,20 @@ head(trees)
 ```{r}
 # number of trees by species
 # histogram
-```
+spec_hist <- trees %>% group_by(genus) %>% mutate(freq = n()) %>% 
+  filter(freq>100, genus!="NA", genus!="unknown") %>%
+  ggplot(aes(x=reorder(genus, genus, function(x) length(x)))) +
+  geom_bar(fill="forestgreen") + 
+  coord_flip() +
+  labs(title="Most common tree genuses in Burlington", x="Genus", y="Count") +
+  scale_y_continuous(expand=c(0,0), limits=c(0,3000), breaks=seq(0,3000,500)) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.border= element_blank(),
+        plot.title=element_text(hjust=0.5), axis.line = element_line(), plot.margin=unit(c(0.5,1,0.5,0.5),"cm"))
 
+spec_hist
+
+```
+This bar chart shows the most common tree genuses in Burlington. Unsurprisingly to anyone who lives in Vermont, the maple tree is by far the most common tree in Burlington. Next comes the Ash, Crabapple, Linden, Oak, and Pine. Considering Burlington's climate and elevation, these all make sense. In the higher elevations of Vermont, evergreens such as pine trees are more common, but since Burlington is by the lake, it has the deciduous trees that make it beautiful in the fall (and barren in the spring).
 
 ## Relationship between species abundance and Land Use
 
@@ -127,9 +139,16 @@ landuse_species_bar
 ```{r}
 # diameter v appraisal
 # scatterplot probably
+appraisal <- trees %>% filter(appraise != "NA", diameter != "NA", height != "NA") %>%
+  ggplot(mapping=aes(x=diameter,y=height, color=appraise)) +
+  geom_point() +
+  scale_color_gradient2(low = 'brown', high = 'green', midpoint=35000, mid="forestgreen") +
+  labs(title="Appraisal Value by Height and Diameter", x="Diameter", y="Height", color="Appraisal Value")
+  
 
+appraisal
 ```
-
+This graph shows the relationship between a tree's diameter, height, and appraisal value. It is clear that there is a relationship between diameter and height, and thicker trees are usually taller. From this plot, it is clear that diameter is more influential than height for a tree's value. The trees with relatively high height and small diameter are worth significantly less than the shorter, thicker trees. This probably has to do with the way that trees age "outwards," making their diameter a better indicator of their age than their height. It seems that there are very few extremely valuable trees, and many trees which are small and cheap.
 
 # Machine Learning
 
